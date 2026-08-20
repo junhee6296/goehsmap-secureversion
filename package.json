@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "description": "화성오산 학교지도의 최소공개 보안 강화 버전",
-  "main": "runtime.js",
+  "main": "server.js",
   "type": "commonjs",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "node runtime.js",
+    "start": "node server.js",
     "sync-data": "node scripts/sync-public-data.js",
-    "check": "node --check runtime.js && node --check app.js && node --check scripts/sync-public-data.js && node --check js/config.js && node --check js/utils.js && node --check js/search.js && node --check js/map.js && node --check js/main.js && node --check js/share_main.js",
+    "check": "node --check server.js && node --check runtime.js && node --check app.js && node --check scripts/sync-public-data.js && node --check js/config.js && node --check js/utils.js && node --check js/search.js && node --check js/map.js && node --check js/main.js && node --check js/share_main.js",
     "test": "node --test"
   },
   "dependencies": {

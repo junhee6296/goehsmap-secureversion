@@ -8,9 +8,10 @@
 chmod +x ubuntu-deploy.sh
 sudo ./ubuntu-deploy.sh \
   --repo https://github.com/junhee6296/goehsmap-secureversion.git \
-  --branch main \
   --email 담당자@example.com
 ```
+
+스크립트는 GitHub 원격 `HEAD`를 조회해 기본 브랜치(현재 `main`)를 자동 감지하고 그 브랜치의 최신 커밋을 복제합니다. 특정 브랜치를 고정해야 할 때만 `--branch 브랜치명`을 추가하세요.
 
 저장소 주소가 다르면 `--repo` 값만 바꾸세요. 기본 배포는 공개 저장소를 전제로 합니다. 비공개 저장소라면 root 계정에 읽기 전용 GitHub Deploy Key와 GitHub 호스트 키를 먼저 등록하고 SSH 저장소 주소를 사용합니다. 토큰을 스크립트나 저장소 URL에 직접 넣지 마세요.
 

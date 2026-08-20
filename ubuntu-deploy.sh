@@ -3,7 +3,6 @@ set -Eeuo pipefail
 umask 027
 
 readonly DEFAULT_REPO_URL="https://github.com/junhee6296/goehsmap-secureversion.git"
-readonly DEFAULT_BRANCH="main"
 readonly DEFAULT_DOMAIN="goehsschoolmap.o-r.kr"
 readonly APP_PORT="3001"
 readonly SERVICE_NAME="goehsschoolmap"
@@ -11,7 +10,7 @@ readonly SERVICE_NAME="goehsschoolmap"
 INSTALL_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$INSTALL_DIR/$(basename -- "${BASH_SOURCE[0]}")"
 REPO_URL="${REPO_URL:-$DEFAULT_REPO_URL}"
-BRANCH="${BRANCH:-$DEFAULT_BRANCH}"
+BRANCH="${BRANCH:-}"
 DOMAIN="${DOMAIN:-$DEFAULT_DOMAIN}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 DEPLOY_USER="${DEPLOY_USER:-}"
@@ -34,7 +33,7 @@ usage() {
 
 옵션:
   --repo URL       GitHub 저장소 URL
-  --branch NAME    배포할 브랜치 (기본: main)
+  --branch NAME    배포할 브랜치; 생략하면 GitHub 기본 브랜치를 자동 감지
   --domain NAME    연결할 도메인
   --email ADDRESS  Let's Encrypt 알림 이메일; 지정하면 인증서까지 자동 발급
   --user NAME      앱을 실행할 Linux 사용자
@@ -64,7 +63,8 @@ trap 'fail "${BASH_SOURCE[0]}:${LINENO}에서 설치가 중단됐습니다."' ER
 
 if [[ "$EUID" -ne 0 ]]; then
     log "패키지, systemd, Nginx 설정을 위해 sudo 권한을 요청합니다."
-    sudo_args=(--repo "$REPO_URL" --branch "$BRANCH" --domain "$DOMAIN")
+    sudo_args=(--repo "$REPO_URL" --domain "$DOMAIN")
+    [[ -n "$BRANCH" ]] && sudo_args+=(--branch "$BRANCH")
     [[ -n "$LETSENCRYPT_EMAIL" ]] && sudo_args+=(--email "$LETSENCRYPT_EMAIL")
     [[ -n "$DEPLOY_USER" ]] && sudo_args+=(--user "$DEPLOY_USER")
     [[ "$SKIP_GIT" -eq 1 ]] && sudo_args+=(--skip-git)
@@ -77,7 +77,7 @@ fi
 source /etc/os-release
 [[ "${ID:-}" == "ubuntu" ]] || fail "이 스크립트는 Ubuntu 전용입니다."
 [[ "$DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]] || fail "도메인 형식이 올바르지 않습니다."
-[[ "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]] || fail "브랜치 형식이 올바르지 않습니다."
+[[ -z "$BRANCH" || "$BRANCH" =~ ^[A-Za-z0-9._/-]+$ ]] || fail "브랜치 형식이 올바르지 않습니다."
 [[ "$INSTALL_DIR" != *[[:space:]]* ]] || fail "설치 디렉터리 경로에는 공백을 사용할 수 없습니다."
 case "$INSTALL_DIR" in
     /|/bin|/boot|/dev|/etc|/home|/lib|/lib64|/opt|/proc|/root|/root/*|/run|/sbin|/srv|/sys|/tmp|/usr|/var)
@@ -108,6 +108,25 @@ if ! command -v certbot >/dev/null 2>&1; then
 fi
 certbot plugins 2>/dev/null | grep -q 'nginx' \
     || fail "현재 Certbot에 Nginx 플러그인이 없습니다. 사용 중인 Certbot 설치 방식에 맞는 Nginx 플러그인을 먼저 설치하세요."
+
+resolve_remote_branch() {
+    [[ "$SKIP_GIT" -eq 0 ]] || return
+    if [[ -n "$BRANCH" ]]; then
+        log "지정한 GitHub 브랜치 사용: $BRANCH"
+        return
+    fi
+
+    local remote_branch
+    if ! remote_branch="$(git ls-remote --symref "$REPO_URL" HEAD | awk '$1 == "ref:" { sub("refs/heads/", "", $2); print $2; exit }')"; then
+        fail "GitHub 기본 브랜치를 확인할 수 없습니다: $REPO_URL"
+    fi
+    [[ -n "$remote_branch" ]] || fail "GitHub 저장소의 기본 브랜치를 찾지 못했습니다: $REPO_URL"
+    [[ "$remote_branch" =~ ^[A-Za-z0-9._/-]+$ ]] || fail "원격 기본 브랜치 형식이 올바르지 않습니다."
+    BRANCH="$remote_branch"
+    log "GitHub 기본 브랜치 자동 감지: $BRANCH"
+}
+
+resolve_remote_branch
 
 install_node() {
     local node_major=0
@@ -157,6 +176,7 @@ sync_repository() {
         log "GitHub $BRANCH 브랜치 업데이트"
         git_in_install fetch --prune origin "$BRANCH"
         git_in_install merge --ff-only "origin/$BRANCH"
+        log "적용한 GitHub 커밋: $(git_in_install rev-parse --short HEAD)"
         return
     fi
 
@@ -170,6 +190,7 @@ sync_repository() {
         --exclude '.env.sync' \
         --exclude 'node_modules' \
         "$temp_dir/repository/" "$INSTALL_DIR/"
+    log "적용한 GitHub 커밋: $(git -C "$temp_dir/repository" rev-parse --short HEAD)"
     rm -rf "$temp_dir"
     trap - RETURN
 }
@@ -178,6 +199,7 @@ sync_repository
 
 [[ -f "$INSTALL_DIR/package-lock.json" ]] || fail "package-lock.json이 없습니다. GitHub 저장소 URL을 확인하세요."
 [[ -f "$INSTALL_DIR/runtime.js" ]] || fail "runtime.js가 없습니다. 보안 버전 저장소인지 확인하세요."
+[[ -f "$INSTALL_DIR/server.js" ]] || fail "server.js가 없습니다. 최신 보안 버전 저장소인지 확인하세요."
 
 if [[ ! -f "$INSTALL_DIR/.env" ]]; then
     install -o root -g "$DEPLOY_GROUP" -m 0640 "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
@@ -215,7 +237,7 @@ User=$DEPLOY_USER
 Group=$DEPLOY_GROUP
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$INSTALL_DIR/.env
-ExecStart=$(command -v node) $INSTALL_DIR/runtime.js
+ExecStart=$(command -v node) $INSTALL_DIR/server.js
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true

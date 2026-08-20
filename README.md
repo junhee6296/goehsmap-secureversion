@@ -9,6 +9,8 @@
 3. `.env.example`을 `.env`로 복사합니다.
 4. `npm start`를 실행한 뒤 `http://127.0.0.1:3001`에 접속합니다.
 
+기본 서버 진입점은 `server.js`이며, 공개 기능만 포함한 `runtime.js` 애플리케이션을 로컬 루프백 주소에서 실행합니다.
+
 ## 데이터 갱신
 
 운영 서버는 Google Sheet에 접속하지 않고 `data/public-*.json` 스냅샷만 읽습니다. 신뢰할 수 있는 관리 PC에서 `.env.sync.example`을 `.env.sync`로 복사해 값을 설정한 후 `npm run sync-data`를 실행합니다. 생성 파일에 금지 필드가 없는지 `npm test`로 확인한 다음 배포합니다.
@@ -21,4 +23,4 @@
 
 운영 절차는 `DEPLOYMENT.md`, 보안 설계와 점검 항목은 `SECURITY.md`를 참고하세요.
 
-Ubuntu 서버에서는 저장소 루트의 `ubuntu-deploy.sh`를 실행하면 스크립트가 있는 디렉터리에 GitHub 파일을 동기화하고 서비스를 자동 구성합니다.
+Ubuntu 서버에서는 저장소 루트의 `ubuntu-deploy.sh`를 실행하면 GitHub 기본 브랜치를 자동 감지해 최신 커밋을 스크립트가 있는 디렉터리에 동기화하고 `server.js` 서비스를 자동 구성합니다.

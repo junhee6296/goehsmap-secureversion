@@ -1,0 +1,51 @@
+/* =========================================
+   legend.css : 지도 범례 공통 스타일
+   ========================================= */
+
+/* 일반 학교 범례 & 공유학교 범례 공통 위치 */
+#legend, #share-legend {
+    position: absolute;
+    top: 80px; 
+    left: 20px;
+    z-index: 1100; /* 검색창(1500)보다 낮게 설정 */
+}
+
+/* 범례 카드 레이아웃 */
+.legend-card {
+    background: rgba(255,255,255,0.9); border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15,23,42,0.14); width: 148px;
+    border: 1px solid rgba(148,163,184,0.3); overflow: hidden;
+}
+
+.legend-header {
+    padding: 10px 12px; background: rgba(248,250,252,0.84); display: flex;
+    justify-content: space-between; align-items: center;
+    cursor: pointer; border-bottom: 1px solid rgba(226,232,240,0.9); user-select: none;
+}
+
+.legend-label { font-weight: bold; font-size: 13px; color: var(--app-text, #172033); display: flex; align-items: center; gap: 5px; margin: 0; }
+.arrow-icon { font-size: 10px; transition: transform 0.3s ease; color: #999; }
+
+/* 접기/펴기 애니메이션 */
+.legend-content { max-height: 400px; overflow-y: auto; transition: max-height 0.3s ease; padding: 8px; }
+.legend-content.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border: none; overflow: hidden; }
+
+/* 항목(Row) 디자인 */
+.legend-row {
+    display: flex; align-items: center; gap: 8px; padding: 6px 5px; font-size: 12px; 
+    cursor: pointer; border-radius: 7px; transition: background var(--motion-fast, 0.18s ease), color var(--motion-fast, 0.18s ease), transform var(--motion-fast, 0.18s ease); color: #475569; margin: 0;
+}
+.legend-row:hover { background: #f0f7ff; color: #1d5fbf; font-weight: bold; transform: translateX(1px); }
+.legend-row.active {
+    background: #eef5ff;
+    color: var(--app-blue-deep, #0f3f79);
+    font-weight: 900;
+    box-shadow: inset 3px 0 0 #3b82f6, 0 4px 10px rgba(37,99,235,0.08);
+}
+.l-symbol { font-weight: bold; width: 16px; text-align: center; font-size: 14px; }
+.legend-reset-row { color: #2563eb; font-weight: bold; font-size: 12px; padding-bottom: 8px; margin-bottom: 5px; border-bottom: 1px dashed #e2e8f0; cursor: pointer; text-align: center; }
+
+/* 모바일 전용 */
+@media (max-width: 768px) {
+    #legend, #share-legend { top: 115px; left: 10px; } 
+}

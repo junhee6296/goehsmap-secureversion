@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>경기도화성오산교육지원청 학교 지도</title>
+  
+  <meta name="description" content="경기도 화성시, 오산시의 초·중·고등학교 및 다(多)가치, 오산나래 공유학교 위치와 상세 정보를 한눈에 확인하세요.">
+  <meta name="keywords" content="화성오산교육지원청, 화성 학교지도, 오산 학교지도, 공유학교 지도, 경기도, 화성시, 오산시">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="화성오산 학교 & 공유학교 지도">
+  <meta property="og:description" content="경기도 화성시와 오산시의 학교 및 공유학교 위치를 한눈에 확인하세요.">
+  <meta property="og:image" content="https://goehsschoolmap.o-r.kr/source/hwaologo.png"> 
+  <meta property="og:url" content="https://goehsschoolmap.o-r.kr/">
+
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.css" />
+  <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.Default.css" />
+  
+  <link rel="stylesheet" href="css/header.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+  <link rel="stylesheet" href="css/marker.css" />
+  <link rel="stylesheet" href="css/popup.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  
+  <link rel="stylesheet" href="css/legend.css" />
+  <link rel="stylesheet" href="css/tooltip.css" />
+</head>
+<body>
+  <div class="container"> 
+    <div class="pc-top-bar"></div>
+
+    <header class="header-center-group">
+      <div class="header-shape">
+        <div class="logo-group">
+          <button class="help-button" id="helpBtn">?</button>
+        </div>
+        <div class="title-wrapper">
+          <a href="https://www.goehs.kr/" target="_blank" class="logo-area">
+            <img src="source/hwaologo.svg" alt="GOEHS" class="logo-img" />
+          </a>
+          <span class="header_text" id="header-title">경기도화성오산교육지원청 학교 지도</span>
+          <a href="/share" class="title-switch-btn image-switch" title="공유학교 지도로 전환">
+            <img src="source/share.png" alt="공유학교" class="switch-icon cover" />
+          </a>
+        </div>
+        <div class="header-spacer"></div>
+      </div>
+    </header>
+    
+    <div class="search-container">
+        <div class="search-wrapper">
+            <input type="text" id="schoolSearch" class="search-input-box" placeholder="학교명 검색 (예: 갈담초)" autocomplete="off" />
+            <div id="searchResults" class="search-results-list"></div>
+        </div>
+        <button data-action="open-filter" class="advanced-search-btn">상세 검색</button>
+    </div>
+
+    <div id="legend" class="legend-floating-box"></div>
+
+    <div class="mobile-bottom-bar"></div>
+
+    <div class="boundary-toggle-container">
+        <div class="control-row">
+            <span class="switch-label">행정구역</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggle-boundary" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    <button id="btn-measure" data-action="toggle-measure">📏 거리재기</button>
+
+    <div id="search-dashboard" class="dashboard-backdrop">
+        <div class="dashboard-window">
+            <div class="dash-header">
+                <div class="search-bar-wrap">
+                    <input type="text" id="adv-name-input" placeholder="학교명 입력">
+                    <button class="dash-main-search-btn" data-action="execute-filter">검색</button>
+                </div>
+                <button class="dash-close-btn" data-action="close-filter">✕</button>
+            </div>
+            <div class="dash-body">
+                <div class="filter-group">
+                    <h3>학교급 분류</h3>
+                    <div class="tag-container">
+                        <button type="button" class="filter-tag" data-type="유치원">유치원</button>
+                        <button type="button" class="filter-tag" data-type="초등학교">초등학교</button>
+                        <button type="button" class="filter-tag" data-type="중학교">중학교</button>
+                        <button type="button" class="filter-tag" data-type="고등학교">고등학교</button>
+                        <button type="button" class="filter-tag" data-type="특수학교">특수학교</button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <h3>설립 구분</h3>
+                    <div class="tag-container">
+                        <button type="button" class="est-tag" data-est="공립">공립</button>
+                        <button type="button" class="est-tag" data-est="사립">사립</button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                  <h3>행정구역</h3>
+                  <div class="tag-container" id="district-tag-container">
+                    <button type="button" class="dist-tag" data-dist="동탄구">동탄구</button>
+                    <button type="button" class="dist-tag" data-dist="병점구">병점구</button>
+                    <button type="button" class="dist-tag" data-dist="효행구">효행구</button>
+                    <button type="button" class="dist-tag" data-dist="만세구">만세구</button>
+                    <button type="button" class="dist-tag" data-dist="오산시">오산시</button>
+                  </div>
+                </div>
+                <section class="filter-group">
+                    <h3>상세 조건</h3>
+                    <div class="range-grid">
+                        <div class="range-item"><label>학생 수</label><div class="range-controls"><div class="range-box min"><span>▲</span><input type="number" id="min-s"></div><div class="range-box max"><span>▼</span><input type="number" id="max-s"></div></div></div>
+                        <div class="range-item"><label>학급 수</label><div class="range-controls"><div class="range-box min"><span>▲</span><input type="number" id="min-c"></div><div class="range-box max"><span>▼</span><input type="number" id="max-c"></div></div></div>
+                        <div class="range-item"><label>교원 수</label><div class="range-controls"><div class="range-box min"><span>▲</span><input type="number" id="min-t"></div><div class="range-box max"><span>▼</span><input type="number" id="max-t"></div></div></div>
+                    </div>
+                </section>
+            </div>
+            <div class="dash-footer">
+                <button class="reset-btn" data-action="reset-filter">🔄 초기화</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="search-results-page" class="dashboard-backdrop">
+        <div class="dashboard-window results-window">
+            <div class="dash-header">
+                <div class="results-header-title">검색 결과 <span id="results-count-badge" class="results-count-badge">0</span></div>
+                <button class="dash-close-btn" data-action="close-results">✕</button>
+            </div>
+            <div id="results-list-container"></div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="help-modal-overlay">
+        <div class="help-modal-content">
+            <span class="help-close-btn" data-action="close-help">&times;</span>
+            <div id="helpContentInject"></div>
+        </div>
+    </div>
+
+    <div id="shared-school-popup" class="shared-popup-overlay">
+      <div class="shared-popup-box">
+        <div class="shared-popup-header"><h2>새로 추가된<br>공유학교 지도를 만나보세요!</h2></div>
+        <div class="shared-popup-body">
+          <div class="shared-popup-image-wrap"><img src="source/click.png" alt="공유학교 지도 버튼 안내"></div>
+          <p class="shared-popup-text">위 사진의 버튼을 누르시면<br><strong>공유학교 지도</strong>로 전환됩니다.<br><br>공유학교 지도에서 같은 위치의 버튼을 누르면<br>다시 원래 지도 홈페이지로 돌아옵니다.</p>
+        </div>
+        <div class="shared-popup-footer">
+          <button id="btn-close-popup" class="shared-popup-close-btn">닫기</button>
+          <div class="shared-popup-options">
+            <label><input type="checkbox" id="chk-hide-7days"> <span>7일간 보지 않기</span></label>
+            <label><input type="checkbox" id="chk-hide-forever"> <span>계속 보지 않기</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/vendor/markercluster/leaflet.markercluster.js"></script>
+  
+  <script src="js/config.js" defer></script>
+  <script src="js/utils.js" defer></script>
+  <script src="js/search.js" defer></script>
+  <script src="js/map.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/notice.js" defer></script>
+</body>
+</html>

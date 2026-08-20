@@ -1,0 +1,25 @@
+[Unit]
+Description=GOEHS secure public school map
+After=network.target
+
+[Service]
+Type=simple
+User=goehsmap
+Group=goehsmap
+WorkingDirectory=/srv/goehsmap-secureversion
+EnvironmentFile=/srv/goehsmap-secureversion/.env
+ExecStart=/usr/bin/node /srv/goehsmap-secureversion/runtime.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

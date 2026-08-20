@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>화성오산 학령인구 지도</title>
+  <meta name="description" content="화성시와 오산시 행정동의 6~21세 학령인구를 3D 입체 지도에서 확인하세요.">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/school-age.css" />
+</head>
+<body>
+  <div class="school-age-shell">
+    <header class="school-age-header">
+      <a class="school-age-brand" href="/">
+        <img src="source/hwaologo.svg" alt="GOEHS" />
+        <span>학령인구 지도</span>
+      </a>
+      <nav class="school-age-nav" aria-label="지도 이동">
+        <a href="/">학교 지도</a>
+        <a href="/share">공유학교 지도</a>
+      </nav>
+    </header>
+
+    <main class="school-age-main">
+      <section class="map-stage" aria-label="화성오산 학령인구 3D 지도">
+        <div class="stage-topline">
+          <div>
+            <p class="eyebrow">Live Population Atlas</p>
+            <h1>화성오산 학령인구 3D 지도</h1>
+          </div>
+          <div class="stage-actions">
+            <button type="button" data-map-action="density" class="view-mode-btn" aria-pressed="false">밀집동</button>
+            <button type="button" data-map-action="top" class="view-mode-btn">상단</button>
+          </div>
+        </div>
+        <div id="schoolAgeScene" class="map-scene" aria-label="행정동별 학령인구 3D 블록 지도"></div>
+        <div class="age-strip" id="ageSelector" aria-label="학령 구간별 보기"></div>
+        <div class="scene-hint"><strong>조작법</strong><span>드래그 회전</span><span>휠/핀치 확대</span><span>탭 선택</span><span>상단 보기</span></div>
+        <div class="hover-card" id="hoverCard" hidden>
+          <span id="hoverRegion">행정동</span>
+          <strong id="hoverValue">-</strong>
+          <div class="hover-breakdown" id="hoverBreakdown"></div>
+        </div>
+      </section>
+
+      <aside class="school-age-panel" aria-label="학령인구 데이터 상태">
+        <div class="panel-section">
+          <p class="panel-label">데이터 상태</p>
+          <h2 id="populationStatusTitle">KOSIS 연동 준비 중</h2>
+          <p id="populationStatusText">화성시·오산시 행정동 경계를 불러오는 중입니다.</p>
+        </div>
+        <div class="panel-section">
+          <div class="year-control-head">
+            <p class="panel-label">통계연도</p>
+            <strong id="selectedYearLabel">-</strong>
+          </div>
+          <input type="range" id="yearSlider" class="year-slider" min="2000" max="2024" step="1" value="2024" disabled>
+          <div class="year-range-labels">
+            <span id="yearMinLabel">-</span>
+            <span id="yearMaxLabel">-</span>
+          </div>
+        </div>
+        <div class="panel-grid">
+          <div>
+            <span class="metric-label">행정동</span>
+            <strong id="populationDongCount">-</strong>
+          </div>
+          <div>
+            <span class="metric-label">자료연도</span>
+            <strong id="populationYear">-</strong>
+          </div>
+        </div>
+        <div class="panel-section">
+          <p class="panel-label">선택 행정동</p>
+          <h2 id="selectedRegionName">화성·오산 전체</h2>
+          <p id="selectedRegionMeta">학령 구간을 선택하면 해당 구간 합계의 높이로 지도가 다시 그려집니다.</p>
+        </div>
+        <div class="panel-section">
+          <p class="panel-label" id="totalPopulationLabel">6~21세 합계</p>
+          <div class="total-population" id="totalPopulation">-</div>
+          <div class="range-bar"><span id="rangeBarFill"></span></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="js/school-age.js" defer></script>
+</body>
+</html>

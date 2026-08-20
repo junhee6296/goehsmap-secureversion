@@ -1,0 +1,40 @@
+/* =========================================
+   share.css : 공유학교 렌더링 전용 스타일
+   ========================================= */
+
+/* 겹침(스택) 상태일 때 라벨(이름표) 위치 조정 */
+.is-stacked .marker-label-box {
+    bottom: auto !important; top: 0 !important; left: 22px !important;
+    transform: translateY(-50%) !important; white-space: nowrap !important;
+    padding: 4px 8px 4px 8px !important; border-radius: 4px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+.view-labels-mode .is-stacked .marker-label-box { transform: translateY(-50%) !important; }
+.region-hwaseong .marker-label-box { border-left-color: #F8B62B; border-left-width: 5px; }
+.region-osan .marker-label-box { border-left-color: #00A1E9; border-left-width: 5px; }
+.region-etc .marker-label-box { border-left-color: #cccccc; border-left-width: 5px; }
+
+/* 공유학교 행정구역 상단 버튼 */
+.shared-dist-btn {
+    padding: 10px 18px !important; gap: 6px !important;
+    box-shadow: 0 4px 0px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.3) !important;
+}
+.shared-dist-label { font-weight: 700; font-size: 15px; letter-spacing: -0.5px; }
+.shared-dist-img { width: 24px; height: 24px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); object-fit: contain; margin-left: -2px; }
+.shared-dist-img.osan-img { transform: none; }
+
+/* 지도 내 까까/코코 마커 이미지 */
+.shared-marker-img { width: 40px; height: 40px; filter: drop-shadow(0 5px 10px rgba(15,23,42,0.24)); object-fit: contain; transition: transform 0.18s ease, filter 0.18s ease; }
+.shared-marker-img.osan-img { width: 40px; height: 40px; margin-top: 0; }
+.custom-combined-marker:hover .shared-marker-img { transform: translateY(-1px) scale(1.04); filter: drop-shadow(0 8px 14px rgba(15,23,42,0.28)); }
+
+/* 공유학교 범례창 전용 이미지 */
+.legend-region-img { width: 24px; height: 24px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); object-fit: contain; }
+.osan-legend-img { width: 30px; height: 30px; margin-left: -3px; margin-right: -3px; }
+
+.popup-title-plain { margin: 0; }
+.shared-popup-adrs { margin-bottom: 12px; }
+.shared-info-list { display: block; }
+.shared-info-list li { margin-bottom: 6px; justify-content: flex-start; gap: 8px; }
+.shared-info-label { width: 65px; display: inline-block; flex: 0 0 65px; }
+.shared-info-place { font-weight: bold; }

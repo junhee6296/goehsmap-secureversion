@@ -1,0 +1,159 @@
+/* =========================================
+   popup.css : 지도 팝업 및 각종 모달 창 통합
+   ========================================= */
+
+/* 1. 기본 Leaflet 팝업 프레임 커스텀 */
+.custom-popup { z-index: 20000 !important; } 
+.custom-popup .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.98); border-radius: 14px; box-shadow: 0 14px 32px rgba(15,23,42,0.22); padding: 0; overflow: visible !important; border: 1px solid rgba(148,163,184,0.28); }
+.custom-popup .leaflet-popup-close-button { z-index: 20100 !important; color: #999 !important; font-size: 18px !important; top: 10px !important; right: 10px !important; }
+.custom-popup .leaflet-popup-content { width: 310px !important; margin: 0; }
+
+/* 2. 학교/기관 상세 정보 팝업 내용 */
+.popup-content { padding: 15px 16px; }
+.popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-right: 30px; }
+.popup-category { font-size: 11px; color: #4A90E2; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+.badge-est { font-size: 10px; color: #666; background: #eee; padding: 1px 5px; border-radius: 4px; font-weight: normal; }
+.popup-title-row { display: flex; align-items: center; justify-content: space-between; }
+.popup-title { font-size: 17px; font-weight: 900; color: var(--app-text, #172033); margin: 0 0 4px 0; }
+.popup-adrs { font-size: 12px; color: #64748b; margin-bottom: 8px; line-height: 1.4; white-space: normal; word-break: keep-all; }
+.popup-hr { border: 0; height: 1px; background: #e2e8f0; margin: 8px 0; }
+.popup-special-bs-box { position: relative; width: 100%; min-width: 0; margin: 4px 0 10px; padding: 0; border: 0; border-radius: 0; background: transparent; box-sizing: border-box; }
+.popup-special-bs-title { display: none; }
+.popup-special-bs-list { --popup-special-bs-font-size: 10.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 4px; min-height: 24px; max-height: 40px; margin: 0; padding: 0; overflow: hidden; border-radius: 0; background: transparent; box-sizing: border-box; line-height: 1.25; }
+.popup-special-bs-badge { display: inline-flex; align-items: center; flex: 0 1 auto; max-width: 100%; min-width: 0; padding: 1px 5px; border: 1px solid rgba(30,70,127,0.18); border-radius: 4px; background: #ffffff; color: #1e467f; font-size: var(--popup-special-bs-font-size); font-weight: 800; line-height: 1.25; letter-spacing: -0.35px; white-space: nowrap; word-break: keep-all; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+.popup-special-bs-box.is-overflowing .popup-special-bs-badge { letter-spacing: -0.6px; padding-left: 3px; padding-right: 3px; }
+
+/* 3. 팝업 내부 테이블 및 리스트 디자인 */
+.popup-info-list { list-style: none; padding: 0; margin: 0; }
+.popup-info-list li { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #444; margin-bottom: 3px; }
+.popup-content.compact-mode .grid-list { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 15px; row-gap: 4px; padding-left: 0; }
+.popup-school-stats-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.popup-info-list .popup-school-stat { flex-direction: column; justify-content: center; align-items: center; gap: 2px; margin-bottom: 0; padding: 6px 7px; border-radius: 8px; border: 1px solid rgba(226,232,240,0.9); background: rgba(248,250,252,0.9); color: #475569; font-size: 10.5px; line-height: 1.2; text-align: center; }
+.popup-school-stat .label { font-weight: 800; color: #475569; }
+.popup-school-stat .value { color: #0f172a; }
+.popup-school-stat .value strong { font-size: 12px; }
+.popup-special-class-label { color: #0f172a; font-size: 9.5px; font-weight: 900; }
+.popup-special-class-count { display: inline-block; margin-left: 2px; color: #0f172a; font-size: 10px; font-weight: 800; }
+.popup-link-top { font-size: 11px; color: #1d5fbf; text-decoration: none; font-weight: 800; padding: 4px 9px; background: #eef5ff; border-radius: 8px; white-space: nowrap; transition: background var(--motion-fast, 0.18s ease), transform var(--motion-fast, 0.18s ease); }
+.popup-link-top:hover { background: #dbeafe; transform: translateY(-1px); }
+.popup-link-none { font-size: 11px; color: #94a3b8; padding: 4px 9px; background: #f1f5f9; border-radius: 8px; white-space: nowrap; }
+
+/* 즐겨찾기 버튼 */
+.fav-toggle-btn { background:none; border:none; font-size: 20px; cursor: pointer; color: #ccc; transition: color 0.2s; padding: 0; }
+.fav-toggle-btn.active { color: gold; }
+
+/* 4. 메모 영역 */
+
+/* 교육청 정보 전용 */
+.edu-office-box { background:#e3f2fd; padding:12px; border-radius:8px; text-align:center; margin-bottom:15px; border:1px solid #bbdefb; }
+.edu-office-label { font-size:12px; color:#555; display:block; margin-bottom:4px; }
+.edu-office-name { font-size:18px; color:#0d47a1; }
+.edu-office-slogan { text-align:center; color:#555; margin-bottom:15px; font-weight:bold; font-size:13px; line-height:1.5; }
+
+/* 5. 도움말(Help) 및 기타 오버레이 모달 공통 */
+.help-modal-overlay, .shared-popup-overlay, .type-info { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.6); z-index: 9999; display: flex; 
+    justify-content: center; align-items: center; backdrop-filter: blur(3px); 
+    opacity: 0; visibility: hidden; transition: opacity 0.3s ease; 
+}
+/* JS로 display가 제어되거나 active 클래스가 붙으면 부드럽게 등장 */
+.help-modal-overlay[style*="display: flex"], .help-modal-overlay[style*="display:flex"], .shared-popup-overlay.active, .type-info:not(.hidden) {
+    opacity: 1; visibility: visible;
+}
+
+/* 도움말 모달 컨텐츠 */
+.help-modal-content { background: white; width: 90%; max-width: 420px; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; }
+.help-close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #ccc; transition: 0.2s; }
+.help-close-btn:hover { color: #333; }
+.help-title { margin-top: 4px; font-size: 19px; font-weight: 900; color: #111827; }
+.help-desc {
+    margin-top: 10px;
+    padding: 12px 13px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13.5px;
+    font-weight: 650;
+    line-height: 1.65;
+}
+.help-desc p { margin: 0 0 8px; }
+.help-desc p:last-child { margin-bottom: 0; }
+.help-desc a { color: #2563eb; font-weight: 900; text-decoration: none; }
+.help-desc a:hover { text-decoration: underline; }
+.help-desc code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-size: 12px;
+}
+
+/* 공유학교 안내 모달 컨텐츠 */
+.shared-popup-box { background: #ffffff; width: 90%; max-width: 360px; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transform: translateY(20px); transition: transform 0.3s ease; }
+.shared-popup-overlay.active .shared-popup-box { transform: translateY(0); }
+.shared-popup-header { background: #2563eb; padding: 22px 20px; text-align: center; color: #ffffff; }
+.shared-popup-header h2 { margin: 0; font-size: 18px; font-weight: 900; line-height: 1.4; letter-spacing: -0.5px; }
+.shared-popup-body { padding: 24px; text-align: center; }
+.shared-popup-image-wrap { border-radius: 12px; overflow: hidden; border: 2px solid #f3f4f6; margin-bottom: 20px; }
+.shared-popup-image-wrap img { width: 100%; display: block; }
+.shared-popup-text { font-size: 14px; color: #4b5563; line-height: 1.6; word-break: keep-all; margin: 0; font-weight: 500; }
+.shared-popup-text strong { color: #2563eb; font-weight: 900; }
+.shared-popup-footer { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+.shared-popup-close-btn { width: 100%; padding: 14px; background: #1f2937; color: #ffffff; border: none; border-radius: 14px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.shared-popup-close-btn:hover { background: #000000; }
+.shared-popup-options { display: flex; justify-content: center; gap: 20px; font-size: 12px; font-weight: bold; color: #6b7280; }
+.shared-popup-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+/* 6. 행정구역 통계 요약 팝업 (showDistrictStats) */
+.stat-popup-card { min-width:252px; padding:4px; }
+.stat-popup-header { border-bottom: 2px solid; padding-bottom:7px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.stat-popup-title { font-size:14px; font-weight:900; color:#333; }
+.stat-popup-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.stat-row { display:flex; flex-direction: column; justify-content:center; align-items:center; gap:2px; background:#f8f9fa; padding:7px 6px; border-radius:6px; border: 1px solid #eef2f7; text-align:center; }
+.stat-label { font-size:10.5px; font-weight:bold; color:#666; }
+.stat-value { font-size:13px; font-weight:900; color:#333; white-space:nowrap; font-variant-numeric: tabular-nums; }
+.stat-unit { font-size:11px; font-weight:normal; margin-left:2px; white-space:nowrap; }
+.stat-popup-footer { margin-top:9px; text-align:center; }
+.btn-focus-region { background:none; border:1px solid #ddd; color:#888; padding:6px 15px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; transition:all 0.2s; width:100%; }
+.btn-focus-region:hover { background:#f0f0f0; color:#333; }
+
+/* 7. 시설 상세 타입 설명 모달 (구 type.css 병합 완료) */
+.type-info-content { background: white; padding: 25px; max-width: Min(90vw, 400px); border-radius: 12px; font-size: 13px; line-height: 1.6; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.type-info-close { float: right; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; margin-top: -5px; transition: 0.2s; }
+.type-info-close:hover { color: #333; }
+.type-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #222; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+.type-info-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.type-info-table th { text-align: left; font-size: 14px; font-weight: bold; padding: 10px 8px; background-color: #f8f9fa; border-radius: 6px 6px 0 0; }
+.type-info-table td { padding: 10px 8px; vertical-align: top; border-top: 1px solid #eee; color: #555; }
+.type-info-table td.first-col{ font-weight: bold; white-space: nowrap; word-break: keep-all; color: #333; width: 30%; background: #fafafa; }
+
+/* --- 공유학교 팝업 내 '주요활동' 파란 네모 박스 스타일 --- */
+.shared-activity-box {
+    background: #f4f9ff; 
+    padding: 12px 14px; 
+    border-radius: 8px; 
+    text-align: left; 
+    margin-top: 15px; 
+    border: 1px solid #cce0ff;
+}
+.activity-label {
+    font-size: 11.5px; 
+    color: #0056b3; 
+    display: inline-block; 
+    margin-bottom: 6px; 
+    font-weight: 900;
+    background: #e3f2fd;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid #b6d4fe;
+}
+.activity-desc {
+    font-size: 13px; 
+    color: #333; 
+    line-height: 1.5; 
+    word-break: keep-all; 
+    display: block; 
+    white-space: pre-wrap;
+}

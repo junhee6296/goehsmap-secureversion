@@ -1,0 +1,51 @@
+/* =========================================
+   base.css : 앱 전체 기본 레이아웃 및 여백
+   ========================================= */
+:root {
+    --app-blue: #1d5fbf;
+    --app-blue-deep: #0f3f79;
+    --app-text: #172033;
+    --app-muted: #64748b;
+    --surface: rgba(255,255,255,0.88);
+    --surface-strong: rgba(255,255,255,0.96);
+    --surface-border: rgba(148,163,184,0.32);
+    --soft-shadow: 0 10px 30px rgba(15,23,42,0.14);
+    --control-shadow: 0 6px 18px rgba(15,23,42,0.16);
+    --motion-fast: 0.18s ease;
+    --motion-med: 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html, body {
+    width: 100%; height: 100%; margin: 0; padding: 0;
+    overflow: hidden; background-color: #eef2f7;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--app-text);
+    display: flex; justify-content: center; align-items: center;
+}
+
+.container { 
+    position: relative; width: 100%; height: 100%; max-width: 1400px; 
+    background: #f8fafc; box-shadow: 0 20px 70px rgba(15,23,42,0.18); overflow: hidden;
+    z-index: 1200;
+}
+
+#map { width: 100%; height: 100%; background: #fdfdfd; z-index: 10; }
+.leaflet-tile { filter: grayscale(78%) saturate(65%) brightness(106%); }
+.cursor-crosshair { cursor: crosshair !important; }
+
+button, input, textarea, .legend-row, .search-item, .result-card {
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .pc-wing-gap { display: none; }
+}

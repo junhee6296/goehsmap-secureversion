@@ -1,0 +1,5 @@
+Contact: https://www.goehs.kr/
+Preferred-Languages: ko
+Canonical: https://goehsschoolmap.o-r.kr/.well-known/security.txt
+Policy: https://goehsschoolmap.o-r.kr/SECURITY
+Expires: 2027-08-20T00:00:00Z

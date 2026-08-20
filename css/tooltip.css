@@ -1,0 +1,46 @@
+/* =========================================
+   tooltip.css : 지도 내 각종 툴팁 및 말풍선
+   ========================================= */
+
+/* 1. 기본 오버레이 모달형 툴팁 */
+.tooltip-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+.tooltip-content {
+    background: #fff; padding: 24px; border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-align: center; max-width: 300px; font-size: 16px;
+}
+.tooltip-content p { margin: 12px 0; }
+#tooltip-close { margin-top: 16px; padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+.hidden { opacity: 0; pointer-events: none; }
+
+/* 2. 거리재기용 마커 툴팁 (빨간 박스 텍스트) */
+.dist-tooltip { 
+    pointer-events: auto !important; cursor: pointer !important; border: 1px solid #e74c3c !important;
+    background: rgba(255, 255, 255, 0.9) !important; color: #e74c3c !important; font-weight: bold !important;
+    padding: 2px 8px !important; border-radius: 6px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+.dist-tooltip::before { display: none !important; }
+
+/* 3. 말풍선 툴팁 스타일 (검은색 반투명) */
+.balloon-tooltip {
+    position: absolute; background: rgba(51, 51, 51, 0.8); color: #fff; padding: 10px 16px;
+    border-radius: 12px; font-size: 12px; max-width: 220px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 2000; opacity: 0; transition: opacity 0.2s ease; pointer-events: none;
+}
+.balloon-tooltip.show { opacity: 1; }
+.tooltip-inner { position: relative; padding: 0px 28px 0px 0px; }
+.tooltip-close { position: absolute; top: -2px; right: 0px; font-size: 16px; cursor: pointer; pointer-events: auto; }
+
+/* 말풍선 꼬리 (아래쪽 뾰족한 삼각형) */
+.legend-tooltip-arrow, .map-tooltip-arrow {
+    position: absolute; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent;
+    border-top: 8px solid rgba(51, 51, 51, 0.8); bottom: -8px; pointer-events: none;
+}
+.legend-tooltip-arrow { left: 20%; transform: translateX(-50%); }
+.map-tooltip-arrow { left: 50%; transform: translateX(-50%); }
+
+/* 특정 위치 고정 */
+#legend-tooltip { bottom: 140px; left: 20px; }
+#map-tooltip { top: 270px; left: 50%; }

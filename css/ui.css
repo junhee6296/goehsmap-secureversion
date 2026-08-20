@@ -1,0 +1,183 @@
+/* =========================================
+   ui.css : 메인 화면의 각종 UI 컨트롤
+   ========================================= */
+
+:root {
+    --map-panel-bg: rgba(255,255,255,0.9);
+    --map-panel-border: 1px solid rgba(148,163,184,0.32);
+    --map-panel-radius: 12px;
+    --map-panel-shadow: 0 10px 30px rgba(15,23,42,0.14);
+}
+
+/* 1. 검색창 및 자동완성 드롭다운 */
+.search-container {
+    position: absolute; top: 11px; left: 20px;
+    z-index: 1500; display: flex; align-items: center; gap: 8px; width: 360px; 
+}
+.search-wrapper { flex: 1; position: relative; }
+.search-input-box {
+    width: 100%; height: 42px; padding: 0 16px; border-radius: 21px; border: 1px solid rgba(148,163,184,0.36);
+    outline: none; font-size: 13px; box-sizing: border-box; box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+    background: rgba(255,255,255,0.92); color: var(--app-text, #172033);
+    transition: border-color var(--motion-fast, 0.18s ease), box-shadow var(--motion-fast, 0.18s ease), background var(--motion-fast, 0.18s ease);
+}
+.search-input-box:focus { border-color: rgba(37,99,235,0.55); background: #ffffff; box-shadow: 0 0 0 4px rgba(37,99,235,0.12), 0 10px 24px rgba(15,23,42,0.12); }
+.advanced-search-btn {
+    flex-shrink: 0; height: 42px; padding: 0 16px; border-radius: 21px;
+    background: linear-gradient(135deg, var(--app-blue-deep, #0f3f79), var(--app-blue, #1d5fbf)); color: white; border: none; font-weight: bold;
+    cursor: pointer; font-size: 12px; box-shadow: 0 8px 18px rgba(29,95,191,0.24);
+    white-space: nowrap !important; 
+    transition: transform var(--motion-fast, 0.18s ease), box-shadow var(--motion-fast, 0.18s ease), filter var(--motion-fast, 0.18s ease);
+}
+.advanced-search-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(29,95,191,0.28); filter: brightness(1.04); }
+.search-results-list {
+    position: absolute; top: calc(100% + 5px); left: 0; width: 100%;
+    background-color: rgba(255,255,255,0.96); border: 1px solid rgba(148,163,184,0.28); border-radius: 14px;
+    box-shadow: 0 16px 34px rgba(15,23,42,0.16); z-index: 9999;
+    max-height: 250px; overflow-y: auto; padding: 0; margin: 0;
+}
+.search-item {
+    background-color: transparent; padding: 10px 15px; font-size: 13px; color: #333;
+    cursor: pointer; border-bottom: 1px solid rgba(226,232,240,0.8); transition: background var(--motion-fast, 0.18s ease), color var(--motion-fast, 0.18s ease); text-align: left; margin: 0;
+}
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background-color: #eef5ff; color: #1d5fbf; font-weight: bold; }
+
+/* 검색 결과 글자색 */
+.search-item-type { font-size: 11px; font-weight: bold; }
+.search-item-type.type-elem { color: #2ECC71; }
+.search-item-type.type-mid { color: #F1C40F; }
+.search-item-type.type-high { color: #E74C3C; }
+.search-item-type.type-kinder { color: #4A90E2; }
+.search-item-type.type-shared { color: #8E44AD; }
+.search-item-type.type-default { color: #333; }
+
+/* 2. 하단 컨트롤러 (PC 환경: 흰색 배경 롤백) */
+.boundary-toggle-container {
+    position: absolute; bottom: 30px; left: 20px; z-index: 1200; 
+    display: flex; flex-direction: row; align-items: center; gap: 20px; 
+    background: var(--map-panel-bg);
+    border: var(--map-panel-border);
+    border-radius: 22px;
+    padding: 10px 18px; 
+    box-shadow: var(--map-panel-shadow);
+    width: max-content; 
+}
+.control-row { display: flex; align-items: center; justify-content: flex-start; gap: 8px; width: auto; margin: 0; }
+.switch-label { font-size: 13px; font-weight: 800; color: var(--app-text, #172033); margin: 0; white-space: nowrap; }
+.toggle-switch { position: relative; display: inline-block; width: 34px; height: 18px; margin:0; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #cbd5e1; transition: background var(--motion-med, 0.28s ease); border-radius: 20px; box-shadow: inset 0 1px 3px rgba(15,23,42,0.16); }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background: white; transition: transform var(--motion-med, 0.28s ease); border-radius: 50%; box-shadow: 0 2px 5px rgba(15,23,42,0.22); }
+input:checked + .slider { background: #3b82f6; }
+input:checked + .slider:before { transform: translateX(16px); }
+
+/* 3. 거리재기 메인 & 서브 UI */
+#btn-measure {
+    position: absolute; bottom: 30px; right: 20px; z-index: 1200;
+    background: rgba(255,255,255,0.92); color: var(--app-text, #172033); border: 1px solid rgba(148,163,184,0.35); padding: 9px 15px;
+    border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer;
+    box-shadow: var(--control-shadow, 0 6px 18px rgba(15,23,42,0.16)); display: flex; align-items: center; gap: 5px;
+    transition: transform var(--motion-fast, 0.18s ease), box-shadow var(--motion-fast, 0.18s ease), background var(--motion-fast, 0.18s ease);
+}
+#btn-measure:hover { background: #ffffff; transform: translateY(-1px); box-shadow: 0 12px 24px rgba(15,23,42,0.18); }
+#btn-measure.active { background: linear-gradient(135deg, #ef4444, #c0392b); color: white; border-color: transparent; box-shadow: 0 10px 24px rgba(231,76,60,0.28); }
+#btn-measure, .btn-pause-measure {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn-pause-measure {
+    position: absolute; bottom: 30px; right: 120px; z-index: 1200; background: rgba(255,255,255,0.92); color: var(--app-text, #172033);
+    border: 1px solid rgba(148,163,184,0.35); padding: 9px 14px; border-radius: 20px; font-size: 13px; font-weight: bold;
+    cursor: pointer; box-shadow: var(--control-shadow, 0 6px 18px rgba(15,23,42,0.16)); transition: all var(--motion-fast, 0.18s ease); display: none;
+}
+.btn-pause-measure:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(15,23,42,0.18); }
+.btn-pause-measure.paused { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: transparent; }
+
+/* 길찾기 안내 미니 팝업 */
+.route-popup-box { text-align: center; padding: 10px; min-width: 188px; }
+.route-popup-title { font-weight: bold; font-size: 13px; margin-bottom: 9px; color: var(--app-text, #172033); }
+.btn-naver-route { background: linear-gradient(135deg, #03c75a, #00a84f); color: white; border: none; padding: 9px 12px; border-radius: 9px; font-weight: bold; cursor: pointer; width: 100%; transition: transform var(--motion-fast, 0.18s ease), filter var(--motion-fast, 0.18s ease), box-shadow var(--motion-fast, 0.18s ease); touch-action: manipulation; -webkit-tap-highlight-color: transparent; box-shadow: 0 6px 14px rgba(3,199,90,0.24); }
+.btn-naver-route:hover { filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 9px 18px rgba(3,199,90,0.28); }
+.route-popup-warning { color: #e74c3c; font-size: 11px; margin-top: 8px; font-weight: bold; }
+/* =========================================
+   6. 모바일 전용 (스마트폰 앱 스타일 3분할 하단 바)
+   ========================================= */
+.mobile-bottom-bar { display: none; }
+
+@media (max-width: 768px) {
+    /* 👇 [수정됨] 모바일 하단 하얀색 독바 (투명도 60%, 블러 4px로 낮춰 지도가 잘 비치게 함) 👇 */
+    .mobile-bottom-bar {
+        display: block; position: absolute; bottom: 0; left: 0; 
+        width: 100%; height: 60px; height: calc(60px + env(safe-area-inset-bottom, 0px)); 
+        background: rgba(255, 255, 255, 0.05) !important; 
+        backdrop-filter: blur(2px) !important; 
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 1000;
+        border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* 좌측 덩어리: 행정구역/즐겨찾기 토글 (범례 카드와 동일한 표면감) */
+    .boundary-toggle-container {
+        position: absolute !important; top: auto !important; bottom: 30px !important; bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important; left: 8px !important;
+        transform: translateY(50%) !important; 
+        height: auto !important; 
+        width: max-content !important; 
+        display: flex !important; flex-direction: column !important; justify-content: center !important; 
+        gap: 6px !important; 
+        background: var(--map-panel-bg) !important;
+        border: var(--map-panel-border) !important;
+        border-radius: var(--map-panel-radius) !important;
+        padding: 6px 10px !important;
+        z-index: 1500 !important;
+        box-shadow: var(--map-panel-shadow) !important;
+    }
+    .boundary-toggle-container::after, .boundary-toggle-container::before { display: none !important; }
+    .control-row { display: flex !important; justify-content: space-between !important; align-items: center !important; width: 100% !important; margin: 0 !important; gap: 8px !important; }
+    .switch-label { font-size: 11px !important; font-weight: 800 !important; color: #333 !important; margin: 0 !important; white-space: nowrap !important; }
+    .toggle-switch { width: 28px !important; height: 15px !important; margin: 0 !important; flex-shrink: 0 !important; }
+    .slider:before { height: 11px !important; width: 11px !important; left: 2px !important; bottom: 2px !important; }
+    input:checked + .slider:before { transform: translateX(13px) !important; }
+
+    /* 중앙 덩어리: 기본 거리재기 버튼 */
+    #btn-measure { 
+        position: absolute !important; top: auto !important; bottom: 30px !important; bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important; left: 50% !important; right: auto !important;
+        transform: translate(-50%, 50%) !important; 
+        height: 36px !important; padding: 0 16px !important; border-radius: 18px !important;
+        background: #2c3e50 !important; color: white !important; border: none !important;
+        box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3) !important; z-index: 1500 !important;
+        font-size: 13px !important; display: flex !important; align-items: center !important; justify-content: center !important;
+        white-space: nowrap !important; transition: all 0.2s ease !important;
+    }
+    #btn-measure.active { 
+        left: calc(50% + 2px) !important; transform: translate(0, 50%) !important; 
+        padding: 0 10px !important; font-size: 11.5px !important; height: 32px !important;
+    }
+    
+    /* 일시정지/중단 버튼 */
+    .btn-pause-measure { 
+        position: absolute !important; top: auto !important; bottom: 30px !important; bottom: calc(30px + env(safe-area-inset-bottom, 0px)) !important; left: 50% !important; right: auto !important;
+        transform: translate(calc(-100% - 2px), 50%) !important; 
+        height: 32px !important; padding: 0 10px !important; border-radius: 16px !important;
+        font-size: 11.5px !important; white-space: nowrap !important; z-index: 1500 !important;
+        display: none !important; align-items: center !important; justify-content: center !important;
+        pointer-events: none !important;
+    }
+    #btn-measure.active ~ .btn-pause-measure {
+        display: flex !important;
+        pointer-events: auto !important;
+    }
+    #btn-measure:not(.active) ~ .btn-pause-measure {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    /* 상단 요소들 */
+    .search-container { 
+        top: 65px !important; left: 50% !important; transform: translateX(-50%) !important; width: 92% !important; 
+    }
+    #legend, #share-legend { top: 115px !important; left: 10px !important; } 
+}

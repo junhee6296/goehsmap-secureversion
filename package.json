@@ -1,0 +1,26 @@
+{
+  "name": "goehsschoolmap-secure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "화성오산 학교지도의 최소공개 보안 강화 버전",
+  "main": "runtime.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node runtime.js",
+    "sync-data": "node scripts/sync-public-data.js",
+    "check": "node --check runtime.js && node --check app.js && node --check scripts/sync-public-data.js && node --check js/config.js && node --check js/utils.js && node --check js/search.js && node --check js/map.js && node --check js/main.js && node --check js/share_main.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "compression": "1.8.1",
+    "dotenv": "17.2.3",
+    "express": "5.1.0",
+    "express-rate-limit": "8.6.2",
+    "helmet": "8.1.0",
+    "leaflet": "1.9.4",
+    "leaflet.markercluster": "1.5.3"
+  }
+}

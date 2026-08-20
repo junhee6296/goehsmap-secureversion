@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 umask 027
 
-readonly DEFAULT_REPO_URL="https://github.com/ssongparta-jpg/goehsmap-secureversion.git"
+readonly DEFAULT_REPO_URL="https://github.com/junhee6296/goehsmap-secureversion.git"
 readonly DEFAULT_BRANCH="main"
 readonly DEFAULT_DOMAIN="goehsschoolmap.o-r.kr"
 readonly APP_PORT="3001"

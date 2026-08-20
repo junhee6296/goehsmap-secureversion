@@ -7,7 +7,7 @@
 ```bash
 chmod +x ubuntu-deploy.sh
 sudo ./ubuntu-deploy.sh \
-  --repo https://github.com/ssongparta-jpg/goehsmap-secureversion.git \
+  --repo https://github.com/junhee6296/goehsmap-secureversion.git \
   --branch main \
   --email 담당자@example.com
 ```

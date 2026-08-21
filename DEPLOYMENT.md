@@ -18,7 +18,7 @@ sudo ./goehsschoolmap.sh
 sudo PROJECT_DIR=/실제/프로젝트/경로 ./goehsschoolmap.sh
 ```
 
-현재 서버처럼 PM2가 root에만 설치된 경우 `sudo ./goehsschoolmap.sh`로 실행합니다. sudo 실행 시 Git·npm 작업은 원래 호출한 `ubuntu` 사용자로 처리하고, PM2만 root 계정으로 실행합니다. 이후에도 일반 PM2와 root PM2를 섞지 말고 아래처럼 `sudo pm2`만 사용하세요. 또한 PM2에 셸 파일을 등록하지 마세요. 스크립트가 `server.js`만 등록합니다.
+현재 서버처럼 PM2가 root에만 설치된 경우 `sudo ./goehsschoolmap.sh`로 실행합니다. sudo 실행 시 Git·npm·PM2를 모두 root 계정으로 통일합니다. Git 소유자가 다른 폴더에서도 동작하도록 이 프로젝트 경로만 명령 단위의 `safe.directory`로 지정하며, 전역 Git 설정은 변경하지 않습니다. 이후에도 일반 PM2와 root PM2를 섞지 말고 아래처럼 `sudo pm2`만 사용하세요. 또한 PM2에 셸 파일을 등록하지 마세요. 스크립트가 `server.js`만 등록합니다.
 
 일상적인 관리 명령은 다음 네 개면 충분합니다.
 

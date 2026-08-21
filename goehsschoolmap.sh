@@ -16,32 +16,15 @@ cd "$PROJECT_DIR" || {
     exit 1
 }
 
-PROJECT_USER="$(id -un)"
 if [ "$(id -u)" -eq 0 ]; then
-    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
-        PROJECT_USER="$SUDO_USER"
-    else
-        PROJECT_USER="$(stat -c '%U' "$PROJECT_DIR")"
-    fi
-    echo ">>> sudo 실행 감지: Git·npm은 $PROJECT_USER, PM2는 root 계정으로 실행합니다."
+    echo ">>> sudo 실행 감지: Git·npm·PM2를 root 계정으로 실행합니다."
 fi
 
-run_project_command() {
-    if [ "$(id -u)" -eq 0 ] && [ "$PROJECT_USER" != "root" ]; then
-        sudo -u "$PROJECT_USER" -H -- "$@"
-    else
-        "$@"
-    fi
+run_git() {
+    git -c "safe.directory=$PROJECT_DIR" "$@"
 }
 
-for command_name in git node npm; do
-    if ! run_project_command sh -c "command -v $command_name" >/dev/null 2>&1; then
-        echo "오류: $PROJECT_USER 계정에서 $command_name 명령을 찾을 수 없습니다."
-        exit 1
-    fi
-done
-
-for command_name in pm2 curl ss; do
+for command_name in git node npm pm2 curl ss; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "오류: $command_name 명령을 찾을 수 없습니다."
         if [ "$command_name" = "pm2" ]; then
@@ -52,27 +35,26 @@ for command_name in pm2 curl ss; do
 done
 
 echo ">>> [$APP_NAME] GitHub main 브랜치 최신 코드로 동기화 중..."
-if ! run_project_command git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if ! run_git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo ">>> Git 저장소가 없어 현재 디렉터리에 새로 초기화합니다."
-    run_project_command git init
+    run_git init
 fi
-if run_project_command git remote get-url origin >/dev/null 2>&1; then
-    run_project_command git remote set-url origin "$REPO_URL"
+if run_git remote get-url origin >/dev/null 2>&1; then
+    run_git remote set-url origin "$REPO_URL"
 else
-    run_project_command git remote add origin "$REPO_URL"
+    run_git remote add origin "$REPO_URL"
 fi
-run_project_command git fetch --prune origin "$BRANCH"
-run_project_command git reset --hard "origin/$BRANCH"
+run_git fetch --prune origin "$BRANCH"
+run_git reset --hard "origin/$BRANCH"
 
 echo ">>> [$APP_NAME] 운영 환경을 ${APP_PORT} 포트로 고정 중..."
-printf 'NODE_ENV=production\nPORT=%s\nTRUST_PROXY=1\n' "$APP_PORT" \
-    | run_project_command tee .env >/dev/null
-run_project_command chmod 600 .env
+printf 'NODE_ENV=production\nPORT=%s\nTRUST_PROXY=1\n' "$APP_PORT" > .env
+chmod 600 .env
 
 echo ">>> [$APP_NAME] npm 패키지 설치 및 코드 검사 중..."
-run_project_command npm ci --omit=dev --ignore-scripts --no-fund --no-audit
-run_project_command npm run check
-run_project_command npm test
+npm ci --omit=dev --ignore-scripts --no-fund --no-audit
+npm run check
+npm test
 
 echo ">>> [$APP_NAME] 기존 PM2 항목 정리 중..."
 pm2 delete "$APP_NAME" >/dev/null 2>&1 || true

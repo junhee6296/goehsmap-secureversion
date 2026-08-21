@@ -10,41 +10,65 @@ APP_PORT="3001"
 BRANCH="main"
 REPO_URL="https://github.com/junhee6296/goehsmap-secureversion.git"
 
-if [ "$(id -u)" -eq 0 ]; then
-    echo "오류: sudo로 실행하지 마세요. ubuntu 사용자로 ./goehsschoolmap.sh를 실행하세요."
-    exit 1
-fi
-
 cd "$PROJECT_DIR" || {
     echo "경로 오류: $PROJECT_DIR 폴더를 찾을 수 없습니다."
     echo "다른 경로라면 PROJECT_DIR=/실제/경로 ./goehsschoolmap.sh 로 실행하세요."
     exit 1
 }
 
-for command_name in git node npm pm2 curl ss; do
+PROJECT_USER="$(id -un)"
+if [ "$(id -u)" -eq 0 ]; then
+    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+        PROJECT_USER="$SUDO_USER"
+    else
+        PROJECT_USER="$(stat -c '%U' "$PROJECT_DIR")"
+    fi
+    echo ">>> sudo 실행 감지: Git·npm은 $PROJECT_USER, PM2는 root 계정으로 실행합니다."
+fi
+
+run_project_command() {
+    if [ "$(id -u)" -eq 0 ] && [ "$PROJECT_USER" != "root" ]; then
+        sudo -u "$PROJECT_USER" -H -- "$@"
+    else
+        "$@"
+    fi
+}
+
+for command_name in git node npm; do
+    if ! run_project_command sh -c "command -v $command_name" >/dev/null 2>&1; then
+        echo "오류: $PROJECT_USER 계정에서 $command_name 명령을 찾을 수 없습니다."
+        exit 1
+    fi
+done
+
+for command_name in pm2 curl ss; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "오류: $command_name 명령을 찾을 수 없습니다."
+        if [ "$command_name" = "pm2" ]; then
+            echo "PM2가 일반 사용자에게만 설치됐다면 sudo 없이 실행하고, 설치되지 않았다면 먼저 PM2를 설치하세요."
+        fi
         exit 1
     fi
 done
 
 echo ">>> [$APP_NAME] GitHub main 브랜치 최신 코드로 동기화 중..."
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if ! run_project_command git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "오류: $PROJECT_DIR 경로가 Git 저장소가 아닙니다."
     exit 1
 fi
-git remote set-url origin "$REPO_URL"
-git fetch --prune origin "$BRANCH"
-git reset --hard "origin/$BRANCH"
+run_project_command git remote set-url origin "$REPO_URL"
+run_project_command git fetch --prune origin "$BRANCH"
+run_project_command git reset --hard "origin/$BRANCH"
 
 echo ">>> [$APP_NAME] 운영 환경을 ${APP_PORT} 포트로 고정 중..."
-printf 'NODE_ENV=production\nPORT=%s\nTRUST_PROXY=1\n' "$APP_PORT" > .env
-chmod 600 .env
+printf 'NODE_ENV=production\nPORT=%s\nTRUST_PROXY=1\n' "$APP_PORT" \
+    | run_project_command tee .env >/dev/null
+run_project_command chmod 600 .env
 
 echo ">>> [$APP_NAME] npm 패키지 설치 및 코드 검사 중..."
-npm ci --omit=dev --ignore-scripts --no-fund --no-audit
-npm run check
-npm test
+run_project_command npm ci --omit=dev --ignore-scripts --no-fund --no-audit
+run_project_command npm run check
+run_project_command npm test
 
 echo ">>> [$APP_NAME] 기존 PM2 항목 정리 중..."
 pm2 delete "$APP_NAME" >/dev/null 2>&1 || true

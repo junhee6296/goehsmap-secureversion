@@ -9,27 +9,27 @@
 ```bash
 cd /home/ubuntu/hawo/hms
 chmod +x goehsschoolmap.sh
-./goehsschoolmap.sh
+sudo ./goehsschoolmap.sh
 ```
 
 프로젝트 경로가 다를 때만 다음처럼 실행합니다.
 
 ```bash
-PROJECT_DIR=/실제/프로젝트/경로 ./goehsschoolmap.sh
+sudo PROJECT_DIR=/실제/프로젝트/경로 ./goehsschoolmap.sh
 ```
 
-`sudo ./goehsschoolmap.sh`로 실행하지 마세요. root PM2와 ubuntu 사용자 PM2가 따로 생기면 같은 포트를 두고 충돌할 수 있습니다. 또한 PM2에 셸 파일을 등록하지 마세요. 스크립트가 `server.js`만 등록합니다.
+현재 서버처럼 PM2가 root에만 설치된 경우 `sudo ./goehsschoolmap.sh`로 실행합니다. sudo 실행 시 Git·npm 작업은 원래 호출한 `ubuntu` 사용자로 처리하고, PM2만 root 계정으로 실행합니다. 이후에도 일반 PM2와 root PM2를 섞지 말고 아래처럼 `sudo pm2`만 사용하세요. 또한 PM2에 셸 파일을 등록하지 마세요. 스크립트가 `server.js`만 등록합니다.
 
 일상적인 관리 명령은 다음 네 개면 충분합니다.
 
 ```bash
-pm2 status
-pm2 logs goehsschoolmap --lines 100
-pm2 restart goehsschoolmap
-pm2 stop goehsschoolmap
+sudo pm2 status
+sudo pm2 logs goehsschoolmap --lines 100
+sudo pm2 restart goehsschoolmap
+sudo pm2 stop goehsschoolmap
 ```
 
-새 Git 커밋까지 반영하려면 단순 `pm2 restart`가 아니라 다시 `./goehsschoolmap.sh`를 실행합니다.
+새 Git 커밋까지 반영하려면 단순 `sudo pm2 restart`가 아니라 다시 `sudo ./goehsschoolmap.sh`를 실행합니다.
 
 스크립트는 `origin`을 공개 보안 저장소로 고정하고 추적 파일을 `main`과 강제 동기화합니다. 서버에서 직접 수정한 추적 파일은 없어지므로 운영 서버에서 코드를 직접 수정하지 않습니다. `.env`와 Git 미추적 파일은 자동 삭제하지 않습니다.
 
@@ -127,17 +127,17 @@ curl -sS -o /dev/null -w '/login=%{http_code}\n' \
 무작정 PM2나 프로세스를 전부 종료하지 말고 먼저 실제 점유자를 확인합니다.
 
 ```bash
-pm2 status
-pm2 describe goehsschoolmap
+sudo pm2 status
+sudo pm2 describe goehsschoolmap
 sudo ss -ltnp 'sport = :3001'
 curl -i http://127.0.0.1:3001/healthz
 sudo tail -n 100 /var/log/nginx/error.log
 ```
 
-PM2의 `script path`가 `server.js`가 아니라 `.sh`라면 잘못 등록된 것입니다. ubuntu 사용자로 다음 명령을 실행해 복구합니다.
+PM2의 `script path`가 `server.js`가 아니라 `.sh`라면 잘못 등록된 것입니다. 다음 명령으로 복구합니다.
 
 ```bash
-pm2 delete goehsschoolmap
+sudo pm2 delete goehsschoolmap
 cd /home/ubuntu/hawo/hms
-./goehsschoolmap.sh
+sudo ./goehsschoolmap.sh
 ```

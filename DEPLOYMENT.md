@@ -8,8 +8,14 @@
 chmod +x ubuntu-deploy.sh
 sudo ./ubuntu-deploy.sh \
   --repo https://github.com/junhee6296/goehsmap-secureversion.git \
+  --domain goehsschoolmap.o-r.kr \
+  --port 3001 \
+  --user goehsschoolmap \
+  --cert-name goehsschoolmap.o-r.kr-isolated \
   --email 담당자@example.com
 ```
+
+실행 시 활성 Nginx 설정에서 `goehsschoolmap.o-r.kr`의 과거 전용 server 블록은 제거하고, 기존 `goehsmap.o-r.kr`과 한 server 블록에 섞여 있으면 새 도메인 토큰과 Certbot 리다이렉트 조건만 제거합니다. 원본 `/etc/nginx`는 `/var/backups/goehsschoolmap-nginx/reset.*/nginx-before`에 보관합니다. 기존 사이트의 계정 `goehsmap`, 포트 3000, 인증서는 변경하지 않습니다.
 
 스크립트는 GitHub 원격 `HEAD`를 조회해 기본 브랜치(현재 `main`)를 자동 감지하고 그 브랜치의 최신 커밋을 복제합니다. 특정 브랜치를 고정해야 할 때만 `--branch 브랜치명`을 추가하세요.
 
@@ -22,23 +28,20 @@ sudo ./ubuntu-deploy.sh \
 ```bash
 sudo ./ubuntu-deploy.sh --skip-certbot
 sudo certbot certonly --nginx \
-  --cert-name goehsschoolmap.o-r.kr \
+  --cert-name goehsschoolmap.o-r.kr-isolated \
   -d goehsschoolmap.o-r.kr \
   --email 담당자@example.com \
   --agree-tos --non-interactive
 sudo ./ubuntu-deploy.sh --skip-git
 ```
 
-기존 `goehsmap.o-r.kr` 인증서 하나에 새 이름을 함께 넣어야 하는 특별한 사유가 있을 때만 아래처럼 기존 인증서를 확장합니다. 기존 인증서를 재발급하는 작업이므로 기본 방식으로는 권장하지 않습니다.
+기존 `goehsmap.o-r.kr` 인증서에 새 도메인을 추가하지 마세요. 두 사이트의 인증서와 갱신 작업이 다시 결합됩니다. 새 사이트는 항상 `goehsschoolmap.o-r.kr-isolated` 인증서 lineage를 사용합니다.
 
 ```bash
-sudo certbot --nginx \
-  --cert-name goehsmap.o-r.kr \
-  -d goehsmap.o-r.kr \
-  -d goehsschoolmap.o-r.kr
+sudo certbot certificates
 ```
 
-## 현재 확인된 상태 (2026-08-20)
+## 현재 확인된 상태 (2026-08-21)
 
 - `goehsschoolmap.o-r.kr` A 레코드는 기존 `goehsmap.o-r.kr`과 같은 `168.107.52.85`를 가리킵니다.
 - 새 호스트의 443 포트는 기존 Nginx/Express 사이트를 응답하지만, TLS 인증서의 이름이 새 도메인과 일치하지 않습니다.
@@ -50,31 +53,41 @@ sudo certbot --nginx \
 
 Ubuntu 서버의 예시 경로는 `/srv/goehsmap-secureversion`입니다.
 
-자동 설치 스크립트를 사용하는 것이 기본입니다. 스크립트는 앱 코드를 `root` 소유로 유지하고 `goehsmap` 계정에는 읽기·실행 권한만 부여합니다.
+자동 설치 스크립트를 사용하는 것이 기본입니다. 스크립트는 앱 코드를 `root` 소유로 유지하고 새 전용 계정 `goehsschoolmap`에는 읽기·실행 권한만 부여합니다.
 
 `.env`에서 `PORT=3001`, `TRUST_PROXY=1`, `NODE_ENV=production`을 유지합니다. 운영 서버에는 `.env.sync`를 복사하지 않습니다.
 
 ## 2. PM2 서비스와 재시작 시 Git 동기화
 
-PM2는 `goehsmap` 전용 계정과 `/var/lib/goehsschoolmap/.pm2` 저장소를 사용합니다. 따라서 root 또는 다른 사용자의 기본 PM2 목록이 아니라 아래 명령으로 관리합니다.
+새 PM2는 `goehsschoolmap` 전용 계정과 `/var/lib/goehsschoolmap/.pm2` 저장소를 사용합니다. 기존 `goehsmap` 계정과 PM2_HOME을 공유하지 않습니다. 반드시 설치된 관리 명령을 사용하세요. 일반 사용자나 root에서 `pm2 restart`, `sudo pm2 update`를 직접 실행하면 서로 다른 PM2 데몬이 같은 3001 포트를 두고 충돌할 수 있습니다.
 
 ```bash
-sudo -u goehsmap env \
-  HOME=/var/lib/goehsschoolmap \
-  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
-  pm2 status
-
-sudo -u goehsmap env \
-  HOME=/var/lib/goehsschoolmap \
-  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
-  pm2 restart goehsschoolmap
+sudo /usr/local/sbin/goehsschoolmap-pm2 status
+sudo /usr/local/sbin/goehsschoolmap-pm2 restart goehsschoolmap
+sudo /usr/local/sbin/goehsschoolmap-pm2 logs goehsschoolmap --lines 100
+sudo /usr/local/sbin/goehsschoolmap-pm2 update
 
 curl http://127.0.0.1:3001/healthz
 ```
 
-`pm2 restart goehsschoolmap`을 실행할 때마다 시작 래퍼가 공개 GitHub 저장소의 기본 브랜치를 확인합니다. 새 커밋이 있으면 fast-forward 동기화 후 고정 의존성 설치, 문법 검사, 개인정보 차단 테스트와 운영 의존성 감사를 수행합니다. 검증에 실패하면 이전 커밋으로 복원하고 검증된 기존 버전으로 시작합니다. 정상 응답은 `{"status":"ok"}`입니다.
+관리 명령으로 `restart` 또는 `reload`를 실행할 때만 공개 GitHub 저장소의 기본 브랜치를 한 번 확인합니다. 새 커밋이 있으면 fast-forward 동기화 후 고정 의존성 설치, 문법 검사, 개인정보 차단 테스트와 운영 의존성 감사를 수행합니다. 검증에 실패하면 이전 커밋으로 복원하며 실행 중인 서버를 불필요하게 내리지 않습니다. PM2의 자동 크래시 재시작은 `server.js`만 다시 실행하므로 Git 동기화 셸이 무한 반복되지 않습니다. 정상 응답은 `{"status":"ok"}`입니다.
 
 앱 계정은 Git 파일을 직접 수정할 수 없습니다. `/usr/local/sbin/goehsschoolmap-sync` 하나만 암호 없이 root로 실행할 수 있도록 제한된 sudoers 규칙을 사용합니다.
+
+### Bad Gateway 또는 PM2 업데이트 후 긴급 복구
+
+아래 명령은 기존 systemd 앱과 전용 PM2 데몬을 중지하고, root PM2에 같은 이름으로 잘못 등록된 앱을 정리한 뒤, 3001 포트가 비었는지 확인하여 `server.js`를 전용 PM2 서비스로 다시 등록합니다. 알 수 없는 다른 프로세스가 포트를 사용하면 PID를 출력하고 중단하므로 임의로 프로세스를 종료하지 않습니다.
+
+```bash
+cd /srv/goehsmap-secureversion
+sudo ./deploy/pm2-recover.sh
+
+sudo /usr/local/sbin/goehsschoolmap-pm2 status
+curl http://127.0.0.1:3001/healthz
+curl -I https://goehsschoolmap.o-r.kr/
+```
+
+`ubuntu-deploy.sh`를 한 번 다시 실행한 뒤에는 어느 디렉터리에서든 `sudo /usr/local/sbin/goehsschoolmap-recover`로 같은 복구를 실행할 수 있습니다.
 
 ## 3. Nginx HTTP 가상호스트
 
@@ -94,7 +107,7 @@ sudo systemctl reload nginx
 
 ```bash
 sudo certbot certonly --nginx \
-  --cert-name goehsschoolmap.o-r.kr \
+  --cert-name goehsschoolmap.o-r.kr-isolated \
   -d goehsschoolmap.o-r.kr
 sudo certbot renew --dry-run
 ```
@@ -128,10 +141,7 @@ npm audit --omit=dev
 검증된 `data/public-map-data.json`과 `data/public-share-data.json`만 서버에 반영하고 서비스를 재시작합니다.
 
 ```bash
-sudo -u goehsmap env \
-  HOME=/var/lib/goehsschoolmap \
-  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
-  pm2 restart goehsschoolmap
+sudo /usr/local/sbin/goehsschoolmap-pm2 restart goehsschoolmap
 ```
 
 ## 되돌리기
@@ -139,8 +149,5 @@ sudo -u goehsmap env \
 기존 `goehsmap.o-r.kr` 가상호스트와 포트 3000 서비스는 수정하지 않습니다. 문제가 생기면 새 Nginx 사이트를 비활성화하고 아래처럼 PM2 앱만 중지하면 기존 사이트는 영향을 받지 않습니다.
 
 ```bash
-sudo -u goehsmap env \
-  HOME=/var/lib/goehsschoolmap \
-  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
-  pm2 stop goehsschoolmap
+sudo /usr/local/sbin/goehsschoolmap-pm2 stop goehsschoolmap
 ```

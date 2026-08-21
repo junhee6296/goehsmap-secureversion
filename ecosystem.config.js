@@ -6,8 +6,7 @@ module.exports = {
     apps: [{
         name: 'goehsschoolmap',
         cwd: __dirname,
-        script: path.join(__dirname, 'deploy', 'pm2-start.sh'),
-        interpreter: '/bin/bash',
+        script: path.join(__dirname, 'server.js'),
         exec_mode: 'fork',
         instances: 1,
         autorestart: true,

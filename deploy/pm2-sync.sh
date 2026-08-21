@@ -45,7 +45,8 @@ git_in_install() {
 enforce_permissions() {
     chown -R root:"$DEPLOY_GROUP" "$INSTALL_DIR"
     chmod -R u=rwX,g=rX,o= "$INSTALL_DIR"
-    chmod 0750 "$INSTALL_DIR/ubuntu-deploy.sh" "$INSTALL_DIR/deploy/pm2-start.sh"
+    chmod 0750 "$INSTALL_DIR/ubuntu-deploy.sh" "$INSTALL_DIR/deploy/pm2-sync.sh" \
+        "$INSTALL_DIR/deploy/pm2-control.sh" "$INSTALL_DIR/deploy/pm2-recover.sh"
     chmod 0640 "$INSTALL_DIR/.env"
 }
 

@@ -23,4 +23,4 @@
 
 운영 절차는 `DEPLOYMENT.md`, 보안 설계와 점검 항목은 `SECURITY.md`를 참고하세요.
 
-Ubuntu 서버에서는 저장소 루트에서 `sudo ./goehsschoolmap.sh`를 실행합니다. sudo 실행 시 Git·npm은 원래 호출 사용자로, PM2는 root로 실행됩니다. 이 스크립트는 GitHub `main` 최신 커밋 동기화, 의존성 설치, 검사, `server.js`의 PM2 실행만 담당하며 앱을 전용 포트 3001에 고정합니다. Nginx와 `goehsschoolmap.o-r.kr-isolated` 전용 Let's Encrypt 인증서는 `DEPLOYMENT.md`의 수동 절차로 기존 `goehsmap.o-r.kr`과 분리합니다. 셸 파일 자체를 PM2에 등록하지 않습니다.
+Ubuntu 서버에서는 저장소 루트에서 `sudo ./goehsschoolmap.sh`를 실행합니다. sudo 실행 시 Git·npm은 원래 호출 사용자로, PM2는 root로 실행됩니다. `.git`이 없는 디렉터리는 그 자리에서 저장소로 초기화합니다. 이 스크립트는 GitHub `main` 최신 커밋 동기화, 의존성 설치, 검사, `server.js`의 PM2 실행만 담당하며 앱을 전용 포트 3001에 고정합니다. Nginx와 `goehsschoolmap.o-r.kr-isolated` 전용 Let's Encrypt 인증서는 `DEPLOYMENT.md`의 수동 절차로 기존 `goehsmap.o-r.kr`과 분리합니다. 셸 파일 자체를 PM2에 등록하지 않습니다.

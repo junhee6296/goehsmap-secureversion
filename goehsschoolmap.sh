@@ -53,10 +53,14 @@ done
 
 echo ">>> [$APP_NAME] GitHub main 브랜치 최신 코드로 동기화 중..."
 if ! run_project_command git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "오류: $PROJECT_DIR 경로가 Git 저장소가 아닙니다."
-    exit 1
+    echo ">>> Git 저장소가 없어 현재 디렉터리에 새로 초기화합니다."
+    run_project_command git init
 fi
-run_project_command git remote set-url origin "$REPO_URL"
+if run_project_command git remote get-url origin >/dev/null 2>&1; then
+    run_project_command git remote set-url origin "$REPO_URL"
+else
+    run_project_command git remote add origin "$REPO_URL"
+fi
 run_project_command git fetch --prune origin "$BRANCH"
 run_project_command git reset --hard "origin/$BRANCH"
 

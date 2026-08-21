@@ -302,7 +302,10 @@ const MapManager = {
         return String(rawValue || '')
             .split(/[,，\n]+/)
             .map(item => item.trim())
-            .filter(item => item && item !== '-' && item.toLowerCase() !== 'no data');
+            .filter(item => item &&
+                item !== '-' &&
+                item.toLowerCase() !== 'no data' &&
+                item.replace(/\s+/g, '').toUpperCase() !== '#N/A');
     },
 
     getVisualTextLength(text) {

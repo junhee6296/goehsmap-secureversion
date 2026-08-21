@@ -109,6 +109,14 @@ function cleanText(value, maxLength = 300) {
         .slice(0, maxLength);
 }
 
+function cleanSchoolTags(value) {
+    return cleanText(value, 700)
+        .split(/[,，\n]+/)
+        .map(item => item.trim())
+        .filter(item => item && item.replace(/\s+/g, '').toUpperCase() !== '#N/A')
+        .join(', ');
+}
+
 function cleanCount(value) {
     const parsed = Number(String(value ?? '').replace(/,/g, '').trim());
     if (!Number.isFinite(parsed)) return 0;
@@ -228,7 +236,7 @@ function sanitizeSchools(table) {
             specialClassCount: type.includes('특수') ? classCount : cleanCount(getCell(row, columns.specialClasses)),
             color: cleanColor(getCell(row, columns.color)),
             url: cleanPublicUrl(getCell(row, columns.url)),
-            specialBusiness: cleanText(getCell(row, columns.specialBusiness), 700)
+            specialBusiness: cleanSchoolTags(getCell(row, columns.specialBusiness))
         }];
     });
 }

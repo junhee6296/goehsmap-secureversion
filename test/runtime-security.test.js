@@ -27,8 +27,9 @@ test('배포 API는 허용 필드만 반환하고 민감 경로를 차단한다'
     assert.ok(data.schools.length > 0);
     assert.deepEqual(Object.keys(data.schools[0]).sort(), SCHOOL_FIELDS);
     assert.equal(data.schools.some(item => String(item.type).includes('교육지원청') || String(item.name).includes('교육지원청')), false);
+    assert.equal(data.schools.some(item => String(item.specialBusiness).includes('#N/A')), false);
 
-    for (const pathname of ['/login', '/admin', '/server.js', '/app.js', '/runtime.js', '/.env', '/package.json', '/school-age', '/js/school-age.js', '/data/public-map-data.json']) {
+    for (const pathname of ['/login', '/admin', '/server.js', '/app.js', '/runtime.js', '/ecosystem.config.js', '/deploy/pm2-sync.sh', '/.env', '/package.json', '/school-age', '/js/school-age.js', '/data/public-map-data.json']) {
         const blocked = await fetch(`${base}${pathname}`);
         assert.equal(blocked.status, 404, pathname);
     }

@@ -2,7 +2,7 @@
 
 ## 자동 설치 스크립트
 
-`ubuntu-deploy.sh`를 Ubuntu 서버의 배포할 디렉터리에 놓고 실행하면 그 디렉터리에 GitHub 파일을 동기화하고, Node.js 의존성·보안 검사·systemd·Nginx·Let's Encrypt까지 설정합니다.
+`ubuntu-deploy.sh`를 Ubuntu 서버의 배포할 디렉터리에 놓고 실행하면 그 디렉터리에 GitHub 파일을 동기화하고, Node.js 의존성·보안 검사·PM2·Nginx·Let's Encrypt까지 설정합니다. 기존 `goehsschoolmap.service`는 중지·비활성화하고 PM2로 전환합니다.
 
 ```bash
 chmod +x ubuntu-deploy.sh
@@ -50,29 +50,31 @@ sudo certbot --nginx \
 
 Ubuntu 서버의 예시 경로는 `/srv/goehsmap-secureversion`입니다.
 
-```bash
-sudo useradd --system --home /srv/goehsmap-secureversion --shell /usr/sbin/nologin goehsmap
-sudo mkdir -p /srv/goehsmap-secureversion
-sudo chown -R goehsmap:goehsmap /srv/goehsmap-secureversion
-cd /srv/goehsmap-secureversion
-npm ci --omit=dev
-cp .env.example .env
-```
+자동 설치 스크립트를 사용하는 것이 기본입니다. 스크립트는 앱 코드를 `root` 소유로 유지하고 `goehsmap` 계정에는 읽기·실행 권한만 부여합니다.
 
 `.env`에서 `PORT=3001`, `TRUST_PROXY=1`, `NODE_ENV=production`을 유지합니다. 운영 서버에는 `.env.sync`를 복사하지 않습니다.
 
-## 2. systemd 서비스
+## 2. PM2 서비스와 재시작 시 Git 동기화
 
-`deploy/goehsschoolmap.service`를 `/etc/systemd/system/goehsschoolmap.service`로 복사한 다음 실행합니다.
+PM2는 `goehsmap` 전용 계정과 `/var/lib/goehsschoolmap/.pm2` 저장소를 사용합니다. 따라서 root 또는 다른 사용자의 기본 PM2 목록이 아니라 아래 명령으로 관리합니다.
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now goehsschoolmap
-sudo systemctl status goehsschoolmap
+sudo -u goehsmap env \
+  HOME=/var/lib/goehsschoolmap \
+  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
+  pm2 status
+
+sudo -u goehsmap env \
+  HOME=/var/lib/goehsschoolmap \
+  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
+  pm2 restart goehsschoolmap
+
 curl http://127.0.0.1:3001/healthz
 ```
 
-정상 응답은 `{"status":"ok"}`입니다.
+`pm2 restart goehsschoolmap`을 실행할 때마다 시작 래퍼가 공개 GitHub 저장소의 기본 브랜치를 확인합니다. 새 커밋이 있으면 fast-forward 동기화 후 고정 의존성 설치, 문법 검사, 개인정보 차단 테스트와 운영 의존성 감사를 수행합니다. 검증에 실패하면 이전 커밋으로 복원하고 검증된 기존 버전으로 시작합니다. 정상 응답은 `{"status":"ok"}`입니다.
+
+앱 계정은 Git 파일을 직접 수정할 수 없습니다. `/usr/local/sbin/goehsschoolmap-sync` 하나만 암호 없이 root로 실행할 수 있도록 제한된 sudoers 규칙을 사용합니다.
 
 ## 3. Nginx HTTP 가상호스트
 
@@ -126,9 +128,19 @@ npm audit --omit=dev
 검증된 `data/public-map-data.json`과 `data/public-share-data.json`만 서버에 반영하고 서비스를 재시작합니다.
 
 ```bash
-sudo systemctl restart goehsschoolmap
+sudo -u goehsmap env \
+  HOME=/var/lib/goehsschoolmap \
+  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
+  pm2 restart goehsschoolmap
 ```
 
 ## 되돌리기
 
-기존 `goehsmap.o-r.kr` 가상호스트와 포트 3000 서비스는 수정하지 않습니다. 문제가 생기면 새 Nginx 사이트만 비활성화하고 새 서비스를 중지하면 기존 사이트는 영향을 받지 않습니다.
+기존 `goehsmap.o-r.kr` 가상호스트와 포트 3000 서비스는 수정하지 않습니다. 문제가 생기면 새 Nginx 사이트를 비활성화하고 아래처럼 PM2 앱만 중지하면 기존 사이트는 영향을 받지 않습니다.
+
+```bash
+sudo -u goehsmap env \
+  HOME=/var/lib/goehsschoolmap \
+  PM2_HOME=/var/lib/goehsschoolmap/.pm2 \
+  pm2 stop goehsschoolmap
+```

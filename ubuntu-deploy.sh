@@ -6,6 +6,7 @@ readonly DEFAULT_REPO_URL="https://github.com/junhee6296/goehsmap-secureversion.
 readonly DEFAULT_DOMAIN="goehsschoolmap.o-r.kr"
 readonly APP_PORT="3001"
 readonly SERVICE_NAME="goehsschoolmap"
+readonly PM2_VERSION="7.0.3"
 
 INSTALL_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_PATH="$INSTALL_DIR/$(basename -- "${BASH_SOURCE[0]}")"
@@ -59,10 +60,12 @@ while (($#)); do
     esac
 done
 
+readonly BRANCH_OVERRIDE="$BRANCH"
+
 trap 'fail "${BASH_SOURCE[0]}:${LINENO}에서 설치가 중단됐습니다."' ERR
 
 if [[ "$EUID" -ne 0 ]]; then
-    log "패키지, systemd, Nginx 설정을 위해 sudo 권한을 요청합니다."
+    log "패키지, PM2, Nginx 설정을 위해 sudo 권한을 요청합니다."
     sudo_args=(--repo "$REPO_URL" --domain "$DOMAIN")
     [[ -n "$BRANCH" ]] && sudo_args+=(--branch "$BRANCH")
     [[ -n "$LETSENCRYPT_EMAIL" ]] && sudo_args+=(--email "$LETSENCRYPT_EMAIL")
@@ -88,6 +91,7 @@ esac
 if [[ -z "$DEPLOY_USER" ]]; then
     DEPLOY_USER="goehsmap"
 fi
+[[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || fail "Linux 실행 사용자 이름이 올바르지 않습니다."
 
 DEPLOY_HOME="/var/lib/$SERVICE_NAME"
 if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
@@ -101,7 +105,7 @@ install -d -o "$DEPLOY_USER" -g "$DEPLOY_GROUP" -m 0750 "$NPM_CACHE_DIR"
 export DEBIAN_FRONTEND=noninteractive
 log "필수 Ubuntu 패키지 설치"
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl git gnupg nginx rsync
+apt-get install -y --no-install-recommends ca-certificates curl git gnupg nginx rsync sudo util-linux
 if ! command -v certbot >/dev/null 2>&1; then
     log "Ubuntu 패키지로 Certbot과 Nginx 플러그인 설치"
     apt-get install -y --no-install-recommends certbot python3-certbot-nginx
@@ -155,6 +159,9 @@ install_node() {
 }
 
 install_node
+log "PM2 $PM2_VERSION 설치"
+npm install --global "pm2@$PM2_VERSION" --ignore-scripts --no-fund --no-audit
+PM2_BIN="$(command -v pm2)"
 
 git_in_install() {
     git -c safe.directory="$INSTALL_DIR" -C "$INSTALL_DIR" "$@"
@@ -200,6 +207,9 @@ sync_repository
 [[ -f "$INSTALL_DIR/package-lock.json" ]] || fail "package-lock.json이 없습니다. GitHub 저장소 URL을 확인하세요."
 [[ -f "$INSTALL_DIR/runtime.js" ]] || fail "runtime.js가 없습니다. 보안 버전 저장소인지 확인하세요."
 [[ -f "$INSTALL_DIR/server.js" ]] || fail "server.js가 없습니다. 최신 보안 버전 저장소인지 확인하세요."
+[[ -f "$INSTALL_DIR/ecosystem.config.js" ]] || fail "ecosystem.config.js가 없습니다. PM2 배포 파일을 확인하세요."
+[[ -f "$INSTALL_DIR/deploy/pm2-start.sh" && -f "$INSTALL_DIR/deploy/pm2-sync.sh" ]] \
+    || fail "PM2 시작·동기화 스크립트가 없습니다."
 
 if [[ ! -f "$INSTALL_DIR/.env" ]]; then
     install -o root -g "$DEPLOY_GROUP" -m 0640 "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
@@ -216,49 +226,57 @@ log "고정된 Node.js 의존성 설치 및 검사"
 npm --prefix "$INSTALL_DIR" ci --omit=dev --ignore-scripts --no-fund --no-audit
 chown -R root:"$DEPLOY_GROUP" "$INSTALL_DIR"
 chmod -R u=rwX,g=rX,o= "$INSTALL_DIR"
-chmod 0750 "$INSTALL_DIR/ubuntu-deploy.sh"
+chmod 0750 "$INSTALL_DIR/ubuntu-deploy.sh" "$INSTALL_DIR/deploy/pm2-start.sh" "$INSTALL_DIR/deploy/pm2-sync.sh"
 chmod 0640 "$INSTALL_DIR/.env"
 runuser -u "$DEPLOY_USER" -- env npm_config_cache="$NPM_CACHE_DIR" npm --prefix "$INSTALL_DIR" run check
 runuser -u "$DEPLOY_USER" -- env npm_config_cache="$NPM_CACHE_DIR" npm --prefix "$INSTALL_DIR" test
 runuser -u "$DEPLOY_USER" -- env npm_config_cache="$NPM_CACHE_DIR" npm --prefix "$INSTALL_DIR" audit --omit=dev --audit-level=high
 
+PM2_HOME="$DEPLOY_HOME/.pm2"
+SYNC_HELPER="/usr/local/sbin/${SERVICE_NAME}-sync"
+SYNC_CONFIG="/etc/${SERVICE_NAME}-sync.conf"
+SUDOERS_FILE="/etc/sudoers.d/${SERVICE_NAME}-pm2-sync"
+install -d -o "$DEPLOY_USER" -g "$DEPLOY_GROUP" -m 0750 "$DEPLOY_HOME" "$PM2_HOME"
+install -o root -g root -m 0755 "$INSTALL_DIR/deploy/pm2-sync.sh" "$SYNC_HELPER"
+
+{
+    printf 'INSTALL_DIR=%q\n' "$INSTALL_DIR"
+    printf 'REPO_URL=%q\n' "$REPO_URL"
+    printf 'BRANCH_OVERRIDE=%q\n' "$BRANCH_OVERRIDE"
+    printf 'DEPLOY_USER=%q\n' "$DEPLOY_USER"
+    printf 'DEPLOY_GROUP=%q\n' "$DEPLOY_GROUP"
+    printf 'NPM_CACHE_DIR=%q\n' "$NPM_CACHE_DIR"
+} > "$SYNC_CONFIG"
+chown root:root "$SYNC_CONFIG"
+chmod 0600 "$SYNC_CONFIG"
+
+printf '%s ALL=(root) NOPASSWD: %s\n' "$DEPLOY_USER" "$SYNC_HELPER" > "$SUDOERS_FILE"
+chown root:root "$SUDOERS_FILE"
+chmod 0440 "$SUDOERS_FILE"
+visudo -cf "$SUDOERS_FILE"
+
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-if [[ -f "$SERVICE_FILE" ]]; then
-    cp -a "$SERVICE_FILE" "${SERVICE_FILE}.bak.$(date +%Y%m%d%H%M%S)"
+if systemctl list-unit-files "${SERVICE_NAME}.service" >/dev/null 2>&1; then
+    log "기존 앱 systemd 서비스 중지·비활성화"
+    systemctl disable --now "$SERVICE_NAME" || true
 fi
-cat > "$SERVICE_FILE" <<EOF
-[Unit]
-Description=GOEHS secure public school map
-After=network.target
+if [[ -f "$SERVICE_FILE" ]]; then
+    cp -a "$SERVICE_FILE" "${SERVICE_FILE}.disabled.$(date +%Y%m%d%H%M%S)"
+    rm -f "$SERVICE_FILE"
+    systemctl daemon-reload
+fi
 
-[Service]
-Type=simple
-User=$DEPLOY_USER
-Group=$DEPLOY_GROUP
-WorkingDirectory=$INSTALL_DIR
-EnvironmentFile=$INSTALL_DIR/.env
-ExecStart=$(command -v node) $INSTALL_DIR/server.js
-Restart=on-failure
-RestartSec=5
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=read-only
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
-LockPersonality=true
+log "PM2 부팅 자동 시작 구성"
+env PATH="$PATH" "$PM2_BIN" startup systemd \
+    -u "$DEPLOY_USER" --hp "$DEPLOY_HOME" --service-name "${SERVICE_NAME}-pm2"
 
-[Install]
-WantedBy=multi-user.target
-EOF
-chmod 0644 "$SERVICE_FILE"
-
-log "systemd 서비스 시작"
-systemctl daemon-reload
-systemctl enable --now "$SERVICE_NAME"
-systemctl restart "$SERVICE_NAME"
+log "PM2 앱 시작"
+runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" PM2_HOME="$PM2_HOME" \
+    "$PM2_BIN" delete "$SERVICE_NAME" >/dev/null 2>&1 || true
+runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" PM2_HOME="$PM2_HOME" \
+    "$PM2_BIN" start "$INSTALL_DIR/ecosystem.config.js" --env production --only "$SERVICE_NAME"
+runuser -u "$DEPLOY_USER" -- env HOME="$DEPLOY_HOME" PM2_HOME="$PM2_HOME" \
+    "$PM2_BIN" save --force
 for _ in {1..20}; do
     if curl --fail --silent --show-error "http://127.0.0.1:${APP_PORT}/healthz" >/dev/null; then
         break
@@ -266,7 +284,7 @@ for _ in {1..20}; do
     sleep 1
 done
 curl --fail --silent --show-error "http://127.0.0.1:${APP_PORT}/healthz" >/dev/null \
-    || fail "로컬 앱 상태 확인에 실패했습니다. journalctl -u $SERVICE_NAME을 확인하세요."
+    || fail "로컬 앱 상태 확인에 실패했습니다. PM2 로그를 확인하세요."
 
 NGINX_AVAILABLE="/etc/nginx/sites-available/$SERVICE_NAME"
 NGINX_ENABLED="/etc/nginx/sites-enabled/$SERVICE_NAME"
@@ -366,6 +384,7 @@ systemctl enable --now certbot.timer >/dev/null 2>&1 || true
 
 log "배포 완료"
 log "로컬 상태: http://127.0.0.1:${APP_PORT}/healthz"
+log "재시작·Git 동기화: sudo -u $DEPLOY_USER env HOME=$DEPLOY_HOME PM2_HOME=$PM2_HOME $PM2_BIN restart $SERVICE_NAME"
 if [[ -d "$CERT_DIR" ]]; then
     log "공개 주소: https://$DOMAIN/"
 else

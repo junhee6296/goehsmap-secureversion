@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node server.js",
     "sync-data": "node scripts/sync-public-data.js",
-    "check": "node --check server.js && node --check runtime.js && node --check app.js && node --check scripts/sync-public-data.js && node --check js/config.js && node --check js/utils.js && node --check js/search.js && node --check js/map.js && node --check js/main.js && node --check js/share_main.js",
+    "check": "node --check server.js && node --check runtime.js && node --check app.js && node --check ecosystem.config.js && node --check scripts/sync-public-data.js && node --check js/config.js && node --check js/utils.js && node --check js/search.js && node --check js/map.js && node --check js/main.js && node --check js/share_main.js",
     "test": "node --test"
   },
   "dependencies": {

@@ -23,4 +23,4 @@
 
 운영 절차는 `DEPLOYMENT.md`, 보안 설계와 점검 항목은 `SECURITY.md`를 참고하세요.
 
-Ubuntu 서버에서는 저장소 루트의 `ubuntu-deploy.sh`를 실행하면 GitHub 기본 브랜치를 자동 감지해 최신 커밋을 스크립트가 있는 디렉터리에 동기화하고 `server.js` 서비스를 자동 구성합니다.
+Ubuntu 서버에서는 저장소 루트의 `ubuntu-deploy.sh`를 실행하면 GitHub 기본 브랜치를 자동 감지해 최신 커밋을 스크립트가 있는 디렉터리에 동기화하고 `server.js`를 PM2로 자동 구성합니다. 이후 `pm2 restart goehsschoolmap`을 실행할 때마다 최신 Git 커밋을 검증한 후 재시작합니다.

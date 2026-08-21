@@ -62,6 +62,14 @@ function cleanText(value, maxLength = 300) {
         .slice(0, maxLength);
 }
 
+function cleanSchoolTags(value) {
+    return cleanText(value, 700)
+        .split(/[,，\n]+/)
+        .map(item => item.trim())
+        .filter(item => item && item.replace(/\s+/g, '').toUpperCase() !== '#N/A')
+        .join(', ');
+}
+
 function cleanCount(value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, Math.min(1000000, Math.round(number))) : 0;
@@ -112,7 +120,7 @@ function sanitizeSchool(record) {
         specialClassCount: cleanCount(record.specialClassCount),
         color: cleanColor(record.color),
         url: cleanUrl(record.url),
-        specialBusiness: cleanText(record.specialBusiness, 700)
+        specialBusiness: cleanSchoolTags(record.specialBusiness)
     };
 }
 

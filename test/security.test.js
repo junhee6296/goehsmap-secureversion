@@ -20,7 +20,7 @@ const generalTable = {
     ],
     rows: [
         { c: [{ v: 0 }, { v: 37.18 }, { v: 127.06 }, { v: '교육지원청' }, { v: '화성오산교육지원청' }, { v: '주소' }, null, null, null, null, null, { v: '#370BC7' }, null, { v: 'https://example.com' }, null, { v: '교육지원청' }, { v: '비공개교육장' }, null, null, null] },
-        { c: [{ v: 1 }, { v: 37.19 }, { v: 127.10 }, { v: '초등학교' }, { v: '테스트초등학교' }, { v: '경기도 화성시 테스트로 1' }, { v: 100 }, { v: 10 }, { v: 6 }, { v: 1 }, null, { v: '#123456' }, null, { v: 'https://school.example' }, null, { v: '공립' }, { v: '비공개교장' }, { v: '비공개교감' }, { v: '비공개행정실장' }, { v: '독서교육' }] }
+        { c: [{ v: 1 }, { v: 37.19 }, { v: 127.10 }, { v: '초등학교' }, { v: '테스트초등학교' }, { v: '경기도 화성시 테스트로 1' }, { v: 100 }, { v: 10 }, { v: 6 }, { v: 1 }, null, { v: '#123456' }, null, { v: 'https://school.example' }, null, { v: '공립' }, { v: '비공개교장' }, { v: '비공개교감' }, { v: '비공개행정실장' }, { v: '#N/A, 독서교육' }] }
     ]
 };
 
@@ -73,9 +73,10 @@ test('공개 API는 인사정보와 교육지원청을 반환하지 않고 민�
     const data = JSON.parse(body);
     assert.equal(data.schools.length, 1);
     assert.equal(data.schools[0].name, '테스트초등학교');
+    assert.equal(data.schools[0].specialBusiness, '독서교육');
     assert.equal(Object.hasOwn(data.schools[0], 'principal'), false);
 
-    for (const pathname of ['/login', '/admin', '/server.js', '/.env', '/package.json']) {
+    for (const pathname of ['/login', '/admin', '/server.js', '/ecosystem.config.js', '/deploy/pm2-sync.sh', '/.env', '/package.json']) {
         const blocked = await originalFetch(`${base}${pathname}`);
         assert.equal(blocked.status, 404, pathname);
     }
